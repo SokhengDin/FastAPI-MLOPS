@@ -21,10 +21,11 @@ services:
     volumes:
       - ./models:/app/models
       - ./logs:/app/logs
+      - ./data:/app/data
     ports:
       - "8000:8000"
     depends_on:
-      - mlflow
+      - mlflow      
     restart : unless-stopped
     networks:
       - public
