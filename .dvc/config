@@ -1,0 +1,5 @@
+[core]
+    remote = minio
+['remote "minio"']
+    url = s3://bucket-ml/irrigation/data
+    endpointurl = http://217.15.161.155:9001
