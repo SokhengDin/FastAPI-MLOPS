@@ -2,6 +2,15 @@
 
 ML system for irrigation need prediction (High / Medium / Low) built on FastAPI, Next.js, MLflow, and DVC.
 
+## Showcase
+
+**Overview — Prediction & Session Stats**
+![Overview](demo1.png)
+
+**Model — Metrics & Feature Importance**
+![Model](demo2.png)
+
+
 ## Stack
 
 | Layer | Tech |
