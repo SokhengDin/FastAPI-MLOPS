@@ -5,8 +5,6 @@ services:
       context    : ./web
       dockerfile : Dockerfile
     container_name : irrigation-web
-    environment:
-      - NEXT_PUBLIC_API_URL=http://your-server-ip:8000/api/v1
     depends_on:
       - api
     restart : unless-stopped
@@ -30,7 +28,7 @@ services:
 
   mlflow:
     build :
-      context    : .
+      context: .
       dockerfile : Dockerfile.mlflow
     container_name : mlflow
     environment:
