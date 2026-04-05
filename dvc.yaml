@@ -1,0 +1,40 @@
+stages:
+  preprocess:
+    cmd : python -m pipeline.preprocess_pipeline
+    deps:
+      - pipeline/preprocess_pipeline.py
+      - ${data.train_path}
+    params:
+      - data
+      - preprocess
+    outs:
+      - models/preprocessor.pkl
+
+  train:
+    cmd : python -m pipeline.train_pipeline
+    deps:
+      - pipeline/train_pipeline.py
+      - models/preprocessor.pkl
+      - ${data.train_path}
+    params:
+      - data
+      - train
+      - mlflow
+    outs:
+      - models/model.pkl
+      - models/run_id
+
+  evaluate:
+    cmd : python -m pipeline.evaluation_pipeline
+    deps:
+      - pipeline/evaluation_pipeline.py
+      - models/model.pkl
+      - models/preprocessor.pkl
+      - ${data.train_path}
+    params:
+      - data
+      - preprocess
+      - mlflow
+    metrics:
+      - models/metrics.json:
+          cache: false

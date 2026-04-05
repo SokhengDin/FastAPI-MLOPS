@@ -1,0 +1,69 @@
+name: Train Pipeline
+
+on:
+  push:
+    paths:
+      - params.yaml
+      - pipeline/**
+      - data/raw/*.dvc
+  workflow_dispatch:
+    inputs:
+      model:
+        description  : "Model to train (lgbm | xgb | catboost)"
+        required     : false
+        default      : lgbm
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Configure DVC remote
+        env:
+          MINIO_ACCESS_KEY  : ${{ secrets.MINIO_ACCESS_KEY }}
+          MINIO_SECRET_KEY  : ${{ secrets.MINIO_SECRET_KEY }}
+        run: |
+          uv run dvc remote modify minio access_key_id     $MINIO_ACCESS_KEY
+          uv run dvc remote modify minio secret_access_key $MINIO_SECRET_KEY
+
+      - name: Pull data
+        run: uv run dvc pull data/raw/train.csv data/raw/test.csv
+
+      - name: Override model param
+        if: ${{ github.event.inputs.model != '' }}
+        run: |
+          python - <<'EOF'
+          import yaml
+          with open("params.yaml") as f:
+              p = yaml.safe_load(f)
+          p["train"]["model"] = "${{ github.event.inputs.model }}"
+          with open("params.yaml", "w") as f:
+              yaml.dump(p, f)
+          EOF
+
+      - name: Run DVC pipeline
+        env:
+          MLFLOW_TRACKING_URI : ${{ secrets.MLFLOW_TRACKING_URI }}
+        run: uv run dvc repro
+
+      - name: Upload metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name  : metrics
+          path  : models/metrics.json
+
+      - name: Push artifacts to DVC remote
+        run: uv run dvc push models/

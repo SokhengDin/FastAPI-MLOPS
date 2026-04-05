@@ -1,0 +1,54 @@
+name: Deploy API
+
+on:
+  workflow_run:
+    workflows: ["Train Pipeline"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on    : ubuntu-latest
+    if         : ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Configure DVC remote
+        env:
+          MINIO_ACCESS_KEY  : ${{ secrets.MINIO_ACCESS_KEY }}
+          MINIO_SECRET_KEY  : ${{ secrets.MINIO_SECRET_KEY }}
+        run: |
+          uv run dvc remote modify minio access_key_id     $MINIO_ACCESS_KEY
+          uv run dvc remote modify minio secret_access_key $MINIO_SECRET_KEY
+
+      - name: Pull latest model artifacts
+        run: uv run dvc pull models/
+
+      - name: Build Docker image
+        run: docker build -t irrigation-api:${{ github.sha }} .
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host      : ${{ secrets.SSH_HOST }}
+          username  : ${{ secrets.SSH_USER }}
+          key       : ${{ secrets.SSH_KEY }}
+          script    : |
+            cd /opt/irrigation-mlops
+            git pull origin main
+            uv run dvc pull models/
+            docker compose up -d --build --no-deps api
+            docker image prune -f

@@ -1,0 +1,36 @@
+data:
+  train_path  : data/raw/train.csv
+  test_path   : data/raw/test.csv
+  target      : Irrigation_Need
+  drop_cols   : [id, Irrigation_Need]
+
+preprocess:
+  test_size   : 0.2
+  seed        : 42
+
+train:
+  model       : lgbm
+  seed        : 42
+  lgbm:
+    n_estimators  : 500
+    learning_rate : 0.05
+    class_weight  : balanced
+  xgb:
+    n_estimators  : 500
+    learning_rate : 0.05
+  catboost:
+    n_estimators  : 500
+    learning_rate : 0.05
+    train_dir     : /tmp/catboost_info
+
+mlflow:
+  experiment_name : irrigation-mlops
+  tracking_uri    : http://localhost:5001
+  artifact_bucket : bucket-ml
+  artifact_prefix : irrigation/mlflow
+
+artifacts:
+  model_dir   : models
+  model_file  : models/model.pkl
+  encoder_file: models/encoders.pkl
+  metrics_file: models/metrics.json

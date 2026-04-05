@@ -1,0 +1,68 @@
+services:
+
+  web:
+    build:
+      context    : ./web
+      dockerfile : Dockerfile
+    container_name : irrigation-web
+    environment:
+      - NEXT_PUBLIC_API_URL=http://your-server-ip:8000/api/v1
+    depends_on:
+      - api
+    restart : unless-stopped
+    networks:
+      - public
+      - internal
+
+  api:
+    build : .
+    container_name : irrigation-api
+    ports:
+      - "8000:8000"
+    env_file: .env
+    volumes:
+      - ./models:/app/models
+      - ./logs:/app/logs
+    depends_on:
+      - mlflow
+    restart : unless-stopped
+    networks:
+      - public
+      - internal
+
+  mlflow:
+    build :
+      context    : .
+      dockerfile : Dockerfile.mlflow
+    container_name : mlflow
+    expose:
+      - "5000"
+    environment:
+      - MLFLOW_S3_ENDPOINT_URL=${MINIO_ENDPOINT}
+      - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}
+      - MLFLOW_AUTH_CONFIG_PATH=/mlflow/auth_config.ini
+      - MLFLOW_FLASK_SERVER_SECRET_KEY=${MLFLOW_SECRET_KEY}
+    command         : >
+      mlflow server
+        --host 0.0.0.0
+        --port 5000
+        --backend-store-uri sqlite:///mlflow.db
+        --default-artifact-root s3://bucket-ml/irrigation/mlflow
+        --app-name basic-auth
+    volumes:
+      - mlflow_data:/mlflow
+      - ./mlflow_auth_config.ini:/mlflow/auth_config.ini:ro
+    restart         : unless-stopped
+    networks:
+      - internal
+
+networks:
+  public:
+    external : true
+    name     : alpha_network
+  internal:
+    internal : true
+
+volumes:
+  mlflow_data:
