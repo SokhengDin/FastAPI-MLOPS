@@ -5,7 +5,7 @@ services:
       context    : ./web
       dockerfile : Dockerfile
     container_name : irrigation-web
-    expose:
+    ports:
       - "3000:3000"
     depends_on:
       - api
@@ -21,7 +21,7 @@ services:
     volumes:
       - ./models:/app/models
       - ./logs:/app/logs
-    expose:
+    ports:
       - "8000:8000"
     depends_on:
       - mlflow
@@ -53,7 +53,7 @@ services:
       - mlflow_data:/mlflow
       - ./mlflow_auth_config.ini:/mlflow/auth_config.ini:ro
     restart         : unless-stopped
-    expose:
+    ports:
       - "5000:5000"
     networks:
       - internal
