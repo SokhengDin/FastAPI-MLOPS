@@ -46,6 +46,7 @@ services:
         --backend-store-uri sqlite:///mlflow.db
         --default-artifact-root s3://bucket-ml/irrigation/mlflow
         --app-name basic-auth
+        --allowed-hosts ${MLFLOW_ALLOWED_HOSTS:-localhost,127.0.0.1}
     volumes:
       - mlflow_data:/mlflow
       - ./mlflow_auth_config.ini:/mlflow/auth_config.ini:ro
