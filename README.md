@@ -11,6 +11,10 @@ ML system for irrigation need prediction (High / Medium / Low) built on FastAPI,
 ![Model](demo2.png)
 
 
+Check it on my website, in real deploy
+[Irrigation Demo](https://irrigation-ml.sokhengdin.dev)
+
+
 ## Stack
 
 | Layer | Tech |
