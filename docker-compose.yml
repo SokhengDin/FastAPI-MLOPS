@@ -5,6 +5,8 @@ services:
       context    : ./web
       dockerfile : Dockerfile
     container_name : irrigation-web
+    expose:
+      - "3000:3000"
     depends_on:
       - api
     restart : unless-stopped
@@ -19,6 +21,8 @@ services:
     volumes:
       - ./models:/app/models
       - ./logs:/app/logs
+    expose:
+      - "8000:8000"
     depends_on:
       - mlflow
     restart : unless-stopped
@@ -49,6 +53,8 @@ services:
       - mlflow_data:/mlflow
       - ./mlflow_auth_config.ini:/mlflow/auth_config.ini:ro
     restart         : unless-stopped
+    expose:
+      - "5000:5000"
     networks:
       - internal
       - public
