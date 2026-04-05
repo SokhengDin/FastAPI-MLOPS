@@ -17,7 +17,8 @@ COPY pipeline/  pipeline/
 COPY utils/     utils/
 COPY main.py    ./
 COPY params.yaml ./
-COPY models/    models/
+
+RUN mkdir -p models logs
 
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="/app"
